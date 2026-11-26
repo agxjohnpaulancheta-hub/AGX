@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AGX Delivery Inc. | Back-Office Wi-Fi Portal</title>
+    <!-- Tailwind CSS CDN for responsive styling (Note: For offline router captive portals without walled-garden CDN access, compile or inline critical CSS) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        agxRed: {
+                            DEFAULT: '#D32F2F',
+                            dark: '#B71C1C',
+                            light: '#FFEBEE',
+                        },
+                        agxSlate: {
+                            DEFAULT: '#1E293B',
+                            dark: '#0F172A',
+                            light: '#334155',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-100 text-agxSlate font-sans antialiased min-h-screen flex items-center justify-center p-0 sm:p-4 md:p-6">
+
+    <!-- =====================================================================
+         CAPTIVE PORTAL ROUTER INTEGRATION NOTES:
+         - MikroTik Hotspot: Replace form `action="#"` with `action="$(link-login-only)"`
+           and include hidden inputs for `dst` (`$(link-orig)`) and `popup` (`true`).
+         - TP-Link Omada / UniFi / Ruijie: Map form submit handler or input names
+           (`username`, `password`, `voucherCode`) to your controller's POST endpoint.
+         - Background Image: Ensure `1000013081_2.jpg` is placed in the same folder
+           as this HTML file on your router's hotspot directory.
+         ===================================================================== -->
+
+    <!-- Main Portal Container -->
+    <div class="w-full max-w-6xl bg-white sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col lg:flex-row min-h-screen sm:min-h-[660px] border border-slate-200">
+        
+        <!-- Left Hero Panel (58% on Desktop: Full-Bleed, Bright & Unobstructed Truck Visual) -->
+        <div class="relative w-full lg:w-[58%] min-h-[260px] sm:min-h-[340px] lg:min-h-full flex flex-col justify-between p-4 sm:p-6 overflow-hidden bg-sky-500">
+            
+            <!-- Primary Router Image (1000013081_2.jpg) with Automatic High-Detail Scenic Fallback for Sandboxed Previews -->
+            <img 
+                id="heroFleetImage"
+                src="1000013081_2.jpg" 
+                onerror="handleImageFallback(this)" 
+                alt="AGX Delivery Inc. Logistics Fleet Truck" 
+                class="absolute inset-0 w-full h-full object-cover object-center opacity-100"
+            >
+
+            <!-- Top Floating Status & Local Photo Preview Test Button (No Dark Wash Over Truck) -->
+            <div class="relative z-10 flex flex-wrap items-center justify-between gap-2">
+                <!-- Network Band Indicator Badge -->
+                <div class="inline-flex items-center space-x-1.5 bg-slate-900/75 backdrop-blur-md border border-white/25 text-white px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>SSID: AGX-BackOffice_5G / 2.4G</span>
+                </div>
+
+                <!-- Interactive Photo Loader so you can preview your exact local file right in the browser -->
+                <label for="localPhotoPicker" class="cursor-pointer inline-flex items-center space-x-1.5 bg-white/90 hover:bg-white text-agxSlate px-3 py-1.5 rounded-full text-xs font-bold shadow-lg border border-slate-200 transition-all" title="Load 1000013081_2.jpg from your device to preview">
+                    <svg class="w-3.5 h-3.5 text-agxRed" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span>Preview Local Photo</span>
+                    <input type="file" id="localPhotoPicker" accept="image/*" class="hidden" onchange="previewLocalFleetPhoto(event)">
+                </label>
+            </div>
+
+            <!-- Subtle Bottom-Left Glassmorphic Brand Pill (Leaves Center & Right Truck View 100% Clear) -->
+            <div class="relative z-10 mt-auto pt-16">
+                <div class="inline-flex items-center space-x-3 bg-slate-900/75 backdrop-blur-md border border-white/20 px-4 py-2.5 rounded-2xl shadow-xl text-white max-w-xs">
+                    <div class="w-9 h-9 rounded-xl bg-agxRed flex items-center justify-center shrink-0 shadow">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
+                        </svg>
+                    </div>
+                    <div class="min-w-0">
+                        <span class="font-extrabold tracking-tight text-sm block leading-tight">AGX Delivery Inc.</span>
+                        <span class="text-[11px] text-slate-200 font-medium block truncate">Authorized Logistics Fleet Gateway</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Authentication & Legal Notice Panel (42% on Desktop) -->
+        <div class="w-full lg:w-[42%] p-6 sm:p-8 flex flex-col justify-between bg-white min-w-0">
+            
+            <!-- Header Section -->
+            <div>
+                <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+                    <div>
+                        <h1 class="text-xl sm:text-2xl font-extrabold text-agxSlate tracking-tight">
+                            AGX Delivery Inc.
+                        </h1>
+                        <p class="text-sm font-medium text-agxRed">
+                            Back-Office Wi-Fi Portal
+                        </p>
+                    </div>
+                    <div class="hidden sm:flex flex-col items-end text-right">
+                        <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Gateway Status</span>
+                        <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                            <span id="gatewayDot" class="w-2 h-2 rounded-full bg-amber-500"></span>
+                            <span id="gatewayStatusText">Authentication Required</span>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Dynamic Alert / Validation Message Box (Replaces browser alert()) -->
+                <div id="statusAlert" class="hidden mb-5 p-3.5 rounded-xl border text-xs sm:text-sm flex items-start space-x-2.5 transition-all" role="alert">
+                    <svg id="statusAlertIcon" class="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"></svg>
+                    <div id="statusAlertText" class="font-medium leading-snug"></div>
+                </div>
+
+                <!-- =========================================================
+                     VIEW 1: LOGIN FORM VIEW
+                     ========================================================= -->
+                <div id="loginView">
+                    <!-- Auth Mode Switcher Tabs -->
+                    <div class="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 rounded-xl mb-6" role="tablist">
+                        <button 
+                            type="button" 
+                            id="tabStaff" 
+                            onclick="switchAuthMode('staff')" 
+                            class="py-2.5 px-3 text-xs sm:text-sm font-semibold rounded-lg bg-white text-agxSlate shadow-sm transition-all flex items-center justify-center space-x-1.5"
+                        >
+                            <svg class="w-4 h-4 text-agxRed shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                            <span>Staff Login</span>
+                        </button>
+                        <button 
+                            type="button" 
+                            id="tabVoucher" 
+                            onclick="switchAuthMode('voucher')" 
+                            class="py-2.5 px-3 text-xs sm:text-sm font-semibold rounded-lg text-slate-500 hover:text-agxSlate transition-all flex items-center justify-center space-x-1.5"
+                        >
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                            </svg>
+                            <span>Voucher / Access Code</span>
+                        </button>
+                    </div>
+
+                    <!-- Captive Portal Login Form -->
+                    <!-- ROUTER NOTE: Set action="$(link-login-only)" for MikroTik or controller endpoint -->
+                    <form id="portalLoginForm" action="#" method="post" onsubmit="handleConnect(event)" class="space-y-4">
+                        <!-- Hidden Router Variables Example (Uncomment when deploying to MikroTik) -->
+                        <!-- <input type="hidden" name="dst" value="$(link-orig)" /> -->
+                        <!-- <input type="hidden" name="popup" value="true" /> -->
+
+                        <!-- Staff Credentials Section -->
+                        <div id="staffFields" class="space-y-4">
+                            <div>
+                                <label for="employeeId" class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+                                    Employee ID / Corporate Username
+                                </label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
+                                        </svg>
+                                    </span>
+                                    <input 
+                                        type="text" 
+                                        id="employeeId" 
+                                        name="username" 
+                                        placeholder="e.g., AGX-10492 or j.delacruz" 
+                                        autocomplete="username"
+                                        class="w-full pl-10 pr-4 py-3 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-agxRed/30 focus:border-agxRed transition-all"
+                                    >
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <label for="employeePassword" class="block text-xs font-semibold uppercase tracking-wider text-slate-600">
+                                        Network Password
+                                    </label>
+                                </div>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                        </svg>
+                                    </span>
+                                    <input 
+                                        type="password" 
+                                        id="employeePassword" 
+                                        name="password" 
+                                        placeholder="Enter your back-office Wi-Fi password" 
+                                        autocomplete="current-password"
+                                        class="w-full pl-10 pr-11 py-3 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-agxRed/30 focus:border-agxRed transition-all"
+                                    >
+                                    <button 
+                                        type="button" 
+                                        onclick="togglePasswordVisibility()" 
+                                        aria-label="Toggle password visibility"
+                                        class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-agxSlate"
+                                    >
+                                        <svg id="eyeIcon" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Voucher / Visiting Staff Access Code Section -->
+                        <div id="voucherFields" class="hidden space-y-4">
+                            <div>
+                                <label for="voucherCode" class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+                                    Temporary Access Code / Device Voucher
+                                </label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                                        </svg>
+                                    </span>
+                                    <input 
+                                        type="text" 
+                                        id="voucherCode" 
+                                        name="voucherCode" 
+                                        placeholder="e.g., AGX-VIS-8829" 
+                                        class="w-full pl-10 pr-4 py-3 text-sm font-mono uppercase tracking-wider bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-agxRed/30 focus:border-agxRed transition-all"
+                                    >
+                                </div>
+                                <p class="mt-1.5 text-[11px] text-slate-500">
+                                    Issued by IT Support for visiting auditors, hub supervisors, or temporary handheld scanners.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Acceptable Use Policy Checkbox -->
+                        <div class="pt-1">
+                            <label class="flex items-start space-x-3 cursor-pointer select-none group">
+                                <input 
+                                    type="checkbox" 
+                                    id="agreePolicy" 
+                                    class="mt-0.5 w-4 h-4 rounded border-slate-300 text-agxRed focus:ring-agxRed cursor-pointer shrink-0"
+                                >
+                                <span class="text-xs text-slate-600 leading-relaxed">
+                                    I confirm that I am an authorized representative of <strong>AGX Delivery Inc.</strong> and agree to abide by the 
+                                    <button type="button" onclick="toggleTermsModal(true)" class="text-agxRed font-semibold underline hover:text-agxRed-dark">
+                                        Back-Office Acceptable Use Policy
+                                    </button>.
+                                </span>
+                            </label>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="pt-2">
+                            <button 
+                                type="submit" 
+                                id="connectBtn"
+                                class="w-full py-3.5 px-5 bg-agxRed hover:bg-agxRed-dark active:scale-[0.99] text-white font-bold text-sm rounded-xl shadow-lg shadow-agxRed/25 transition-all flex items-center justify-center space-x-2"
+                            >
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
+                                </svg>
+                                <span>Connect to Wi-Fi</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- =========================================================
+                     VIEW 2: AUTHENTICATED / CONNECTED STATUS SCREEN
+                     ========================================================= -->
+                <div id="connectedView" class="hidden space-y-5 py-2">
+                    <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 text-center space-y-2">
+                        <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-sm">
+                            <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-extrabold text-emerald-900">Connected &amp; Authenticated</h3>
+                        <p class="text-xs text-emerald-700">
+                            Your device is now authorized on the <strong>AGX-BackOffice</strong> internal network.
+                        </p>
+                    </div>
+
+                    <!-- Session Diagnostics Table (Router Variables Ready) -->
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2.5 text-xs">
+                        <div class="flex justify-between py-1 border-b border-slate-200/70 gap-2">
+                            <span class="text-slate-500 font-medium">Authenticated Account</span>
+                            <span id="sessionUser" class="font-bold text-agxSlate break-all text-right">AGX-STAFF</span>
+                        </div>
+                        <div class="flex justify-between py-1 border-b border-slate-200/70 gap-2">
+                            <span class="text-slate-500 font-medium">Assigned IP Address</span>
+                            <!-- ROUTER NOTE: Replace with $(ip) on MikroTik -->
+                            <span id="sessionIp" class="font-mono font-semibold text-agxSlate">10.24.18.142</span>
+                        </div>
+                        <div class="flex justify-between py-1 border-b border-slate-200/70 gap-2">
+                            <span class="text-slate-500 font-medium">Client MAC Address</span>
+                            <!-- ROUTER NOTE: Replace with $(mac) on MikroTik -->
+                            <span id="sessionMac" class="font-mono font-semibold text-agxSlate">A4:83:E7:2B:91:0C</span>
+                        </div>
+                        <div class="flex justify-between py-1 gap-2">
+                            <span class="text-slate-500 font-medium">Active Session Duration</span>
+                            <span id="sessionTimer" class="font-mono font-bold text-agxRed">00:00:00</span>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row gap-2.5">
+                        <a 
+                            href="https://www.google.com" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            class="flex-1 py-3 px-4 bg-agxSlate hover:bg-agxSlate-dark text-white text-xs sm:text-sm font-bold rounded-xl text-center transition-all"
+                        >
+                            Continue to Intranet / Web
+                        </a>
+                        <!-- ROUTER NOTE: Link to $(link-logout) in production -->
+                        <button 
+                            type="button" 
+                            onclick="handleDisconnect()" 
+                            class="py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-semibold rounded-xl transition-all"
+                        >
+                            Disconnect Session
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- =============================================================
+                 FOOTER: IT SUPPORT & MANDATORY COPYRIGHT NOTICE
+                 ============================================================= -->
+            <div class="mt-8 pt-5 border-t border-slate-200 space-y-4">
+                <!-- IT Support & Device Whitelisting Box -->
+                <div class="bg-slate-50 rounded-xl p-3.5 border border-slate-200/80">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-bold text-agxSlate flex items-center gap-1.5">
+                            <svg class="w-4 h-4 text-agxRed shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                            IT Support &amp; Device MAC Whitelisting
+                        </span>
+                    </div>
+                    <div class="grid grid-cols-1 gap-2 text-[11px] text-slate-600">
+                        <div class="bg-white px-3 py-2 rounded-lg border border-slate-200/60 flex items-center justify-between gap-2 min-w-0">
+                            <span class="text-slate-400 text-[10px] uppercase font-semibold shrink-0">Feishu Helpdesk</span>
+                            <span class="font-semibold text-agxSlate text-right" style="word-break: break-all;">anchetajohnpaul222@gmail.com</span>
+                        </div>
+                        <div class="bg-white px-3 py-2 rounded-lg border border-slate-200/60 flex items-center justify-between gap-2 min-w-0">
+                            <span class="text-slate-400 text-[10px] uppercase font-semibold shrink-0">IT Email</span>
+                            <span class="font-semibold text-agxSlate text-right" style="word-break: break-all;">it.agxdeliveryinc@yahoo.com</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mandatory Copyright & Security Notice -->
+                <div class="text-[11px] text-slate-500 leading-relaxed">
+                    <p>
+                        <strong class="text-agxSlate">&copy; 2026 AGX Delivery Inc. All Rights Reserved.</strong> 
+                        This back-office wireless network is proprietary to AGX Delivery Inc. and is strictly restricted to authorized personnel for official business use only. Unauthorized access, sharing of credentials, or misuse of this network is prohibited and may result in disciplinary or legal action.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- =====================================================================
+         MODAL: ACCEPTABLE USE POLICY / TERMS OF USE VIEWER
+         ===================================================================== -->
+    <div id="termsModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden">
+            <div class="px-6 py-4 bg-agxSlate text-white flex items-center justify-between">
+                <h3 id="modalTitle" class="font-bold text-sm sm:text-base">AGX Delivery Inc. — Wi-Fi Acceptable Use Policy</h3>
+                <button type="button" onclick="toggleTermsModal(false)" class="text-slate-300 hover:text-white p-1 rounded-lg">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="p-6 space-y-3 text-xs sm:text-sm text-slate-600 max-h-[60vh] overflow-y-auto leading-relaxed">
+                <p><strong>1. Authorized Access Only:</strong> Connection to <em>AGX-BackOffice_5G</em> and <em>AGX-BackOffice_2.4G</em> is restricted to active employees and IT-approved corporate hardware.</p>
+                <p><strong>2. Credential Confidentiality:</strong> Sharing employee login credentials, access codes, or MAC-spoofing to bypass gateway controls is strictly prohibited.</p>
+                <p><strong>3. Network Monitoring:</strong> All bandwidth usage, DNS queries, and connection logs are monitored by AGX Delivery Inc. Information Security to protect parcel tracking and logistics data.</p>
+                <p><strong>4. Bandwidth &amp; Security Compliance:</strong> Peer-to-peer file sharing, unauthorized routers/hotspots, and high-bandwidth personal streaming during operational hours are restricted.</p>
+            </div>
+            <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex justify-end space-x-2">
+                <button type="button" onclick="acceptTermsFromModal()" class="px-4 py-2 bg-agxRed hover:bg-agxRed-dark text-white text-xs font-bold rounded-xl transition-all">
+                    I Understand &amp; Agree
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =====================================================================
+         JAVASCRIPT: INTERACTIVITY, VALIDATION & SESSION TIMER
+         ===================================================================== -->
+    <script>
+        let currentAuthMode = 'staff';
+        let timerInterval = null;
+        let sessionSeconds = 0;
+
+        function handleImageFallback(imgEl) {
+            imgEl.onerror = null;
+            const svgScene = `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 750" preserveAspectRatio="xMidYMid slice">
+              <defs>
+                <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#0284C7"/>
+                  <stop offset="55%" stop-color="#38BDF8"/>
+                  <stop offset="100%" stop-color="#BAE6FD"/>
+                </linearGradient>
+                <linearGradient id="mtnGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#15803D"/>
+                  <stop offset="100%" stop-color="#14532D"/>
+                </linearGradient>
+                <linearGradient id="fieldGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#65A30D"/>
+                  <stop offset="100%" stop-color="#84CC16"/>
+                </linearGradient>
+                <linearGradient id="truckRed" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#EF4444"/>
+                  <stop offset="100%" stop-color="#B91C1C"/>
+                </linearGradient>
+              </defs>
+              <rect width="1000" height="520" fill="url(#skyGrad)"/>
+              <ellipse cx="240" cy="145" rx="160" ry="52" fill="#FFFFFF" opacity="0.88"/>
+              <ellipse cx="360" cy="130" rx="130" ry="44" fill="#FFFFFF" opacity="0.92"/>
+              <ellipse cx="640" cy="175" rx="190" ry="48" fill="#FFFFFF" opacity="0.72"/>
+              <polygon points="40,480 390,195 760,480" fill="url(#mtnGrad)"/>
+              <polygon points="390,195 510,480 760,480" fill="#166534" opacity="0.65"/>
+              <rect x="0" y="455" width="1000" height="35" fill="#14532D"/>
+              <rect x="0" y="485" width="1000" height="125" fill="url(#fieldGrad)"/>
+              <polygon points="0,605 1000,585 1000,612 0,638" fill="#F8FAFC"/>
+              <polygon points="0,638 1000,612 1000,750 0,750" fill="#475569"/>
+              <polygon points="0,685 1000,655 1000,750 0,750" fill="#334155"/>
+              <ellipse cx="705" cy="645" rx="235" ry="20" fill="#0F172A" opacity="0.55"/>
+              <rect x="630" y="335" width="295" height="235" rx="8" fill="url(#truckRed)" stroke="#991B1B" stroke-width="3"/>
+              <path d="M 925 350 C 760 365, 735 535, 925 565 Z" fill="#FFFFFF"/>
+              <text x="845" y="468" font-family="Inter, Arial, sans-serif" font-weight="900" font-style="italic" font-size="38" fill="#DC2626" text-anchor="middle">AGX</text>
+              <rect x="465" y="410" width="165" height="160" rx="10" fill="url(#truckRed)" stroke="#991B1B" stroke-width="3"/>
+              <rect x="485" y="430" width="115" height="65" rx="6" fill="#1E293B"/>
+              <circle cx="535" cy="575" r="46" fill="#0F172A"/>
+              <circle cx="535" cy="575" r="24" fill="#CBD5E1"/>
+              <circle cx="815" cy="575" r="46" fill="#0F172A"/>
+              <circle cx="815" cy="575" r="24" fill="#CBD5E1"/>
+            </svg>`.trim();
+            imgEl.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgScene);
+        }
+
+        function previewLocalFleetPhoto(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imgEl = document.getElementById('heroFleetImage');
+                imgEl.onerror = null;
+                imgEl.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function switchAuthMode(mode) {
+            currentAuthMode = mode;
+            const tabStaff = document.getElementById('tabStaff');
+            const tabVoucher = document.getElementById('tabVoucher');
+            const staffFields = document.getElementById('staffFields');
+            const voucherFields = document.getElementById('voucherFields');
+            hideAlert();
+
+            if (mode === 'staff') {
+                tabStaff.className = 'py-2.5 px-3 text-xs sm:text-sm font-semibold rounded-lg bg-white text-agxSlate shadow-sm transition-all flex items-center justify-center space-x-1.5';
+                tabVoucher.className = 'py-2.5 px-3 text-xs sm:text-sm font-semibold rounded-lg text-slate-500 hover:text-agxSlate transition-all flex items-center justify-center space-x-1.5';
+                staffFields.classList.remove('hidden');
+                voucherFields.classList.add('hidden');
+            } else {
+                tabVoucher.className = 'py-2.5 px-3 text-xs sm:text-sm font-semibold rounded-lg bg-white text-agxSlate shadow-sm transition-all flex items-center justify-center space-x-1.5';
+                tabStaff.className = 'py-2.5 px-3 text-xs sm:text-sm font-semibold rounded-lg text-slate-500 hover:text-agxSlate transition-all flex items-center justify-center space-x-1.5';
+                voucherFields.classList.remove('hidden');
+                staffFields.classList.add('hidden');
+            }
+        }
+
+        function togglePasswordVisibility() {
+            const input = document.getElementById('employeePassword');
+            input.type = input.type === 'password' ? 'text' : 'password';
+        }
+
+        function toggleTermsModal(show) {
+            const modal = document.getElementById('termsModal');
+            if (show) {
+                modal.classList.remove('hidden');
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+
+        function acceptTermsFromModal() {
+            document.getElementById('agreePolicy').checked = true;
+            toggleTermsModal(false);
+            hideAlert();
+        }
+
+        function showAlert(message, type = 'error') {
+            const alertBox = document.getElementById('statusAlert');
+            const alertText = document.getElementById('statusAlertText');
+            const alertIcon = document.getElementById('statusAlertIcon');
+
+            alertBox.classList.remove('hidden', 'bg-red-50', 'border-red-200', 'text-red-800', 'bg-emerald-50', 'border-emerald-200', 'text-emerald-800');
+
+            if (type === 'error') {
+                alertBox.classList.add('bg-red-50', 'border-red-200', 'text-red-800');
+                alertIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />';
+            } else {
+                alertBox.classList.add('bg-emerald-50', 'border-emerald-200', 'text-emerald-800');
+                alertIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />';
+            }
+
+            alertText.textContent = message;
+        }
+
+        function hideAlert() {
+            document.getElementById('statusAlert').classList.add('hidden');
+        }
+
+        function handleConnect(event) {
+            event.preventDefault();
+            hideAlert();
+
+            const agreed = document.getElementById('agreePolicy').checked;
+            let accountLabel = '';
+
+            if (currentAuthMode === 'staff') {
+                const userVal = document.getElementById('employeeId').value.trim();
+                const passVal = document.getElementById('employeePassword').value.trim();
+
+                if (!userVal || !passVal) {
+                    showAlert('Please enter your Employee ID / Username and Network Password.', 'error');
+                    return;
+                }
+                accountLabel = userVal;
+            } else {
+                const voucherVal = document.getElementById('voucherCode').value.trim().toUpperCase();
+                if (!voucherVal) {
+                    showAlert('Please enter your Temporary Access Code or Device Voucher.', 'error');
+                    return;
+                }
+                accountLabel = 'VOUCHER: ' + voucherVal;
+            }
+
+            if (!agreed) {
+                showAlert('You must agree to the Back-Office Acceptable Use Policy before connecting.', 'error');
+                return;
+            }
+
+            document.getElementById('sessionUser').textContent = accountLabel;
+            document.getElementById('loginView').classList.add('hidden');
+            document.getElementById('connectedView').classList.remove('hidden');
+            document.getElementById('gatewayDot').className = 'w-2 h-2 rounded-full bg-emerald-500';
+            document.getElementById('gatewayStatusText').textContent = 'Connected';
+
+            startSessionTimer();
+        }
+
+        function handleDisconnect() {
+            if (timerInterval) clearInterval(timerInterval);
+            sessionSeconds = 0;
+            document.getElementById('sessionTimer').textContent = '00:00:00';
+            document.getElementById('connectedView').classList.add('hidden');
+            document.getElementById('loginView').classList.remove('hidden');
+            document.getElementById('gatewayDot').className = 'w-2 h-2 rounded-full bg-amber-500';
+            document.getElementById('gatewayStatusText').textContent = 'Authentication Required';
+        }
+
+        function startSessionTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            sessionSeconds = 0;
+            timerInterval = setInterval(() => {
+                sessionSeconds++;
+                const hrs = String(Math.floor(sessionSeconds / 3600)).padStart(2, '0');
+                const mins = String(Math.floor((sessionSeconds % 3600) / 60)).padStart(2, '0');
+                const secs = String(sessionSeconds % 60).padStart(2, '0');
+                document.getElementById('sessionTimer').textContent = `${hrs}:${mins}:${secs}`;
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
